@@ -14,5 +14,7 @@ namespace LSBlueZone.API.Models
 
         [Required]
         public string Password { get; set; }
+
+        public List<Car> Cars { get; set; }
     }
 }
