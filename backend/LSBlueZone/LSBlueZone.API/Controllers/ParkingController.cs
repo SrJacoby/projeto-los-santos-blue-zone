@@ -3,6 +3,8 @@ using LSBlueZone.API.Context;
 using LSBlueZone.API.DTOs;
 using LSBlueZone.API.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace LSBlueZone.API.Controllers
 {
@@ -17,9 +19,19 @@ namespace LSBlueZone.API.Controllers
             _context = context;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateParking(CreateParkingDTO dto)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null)
+            {
+                return Unauthorized("Token inválido");
+            }
+
+            var userId = int.Parse(userIdClaim.Value);
+
             var allowedDurations = new List<int> { 5, 15, 30, 45, 60, 120, 180 };
 
             if(!allowedDurations.Contains(dto.DurationMinutes))
@@ -27,7 +39,8 @@ namespace LSBlueZone.API.Controllers
                 return BadRequest("Tempo inválido");
             }
 
-            var car = await _context.Cars.FindAsync(dto.CarId);
+            var car = await _context.Cars.FirstOrDefaultAsync(c => c.Id == dto.CarId && c.UserId == userId);
+
             if (car == null)
                 return NotFound("Carro não encontrado");
 

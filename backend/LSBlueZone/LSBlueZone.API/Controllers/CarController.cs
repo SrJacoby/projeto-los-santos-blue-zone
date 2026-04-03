@@ -3,6 +3,8 @@ using LSBlueZone.API.Context;
 using LSBlueZone.API.DTOs;
 using LSBlueZone.API.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace LSBlueZone.API.Controllers
 {
@@ -18,23 +20,25 @@ namespace LSBlueZone.API.Controllers
         }
 
         // Criar carro
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateCar(CreateCarDTO dto)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if(userIdClaim == null)
+            {
+                return Unauthorized("Token inválido");
+            }
+
+            var userId = int.Parse(userIdClaim.Value);
+
             //verificar placa duplicada
             var plateExists = await _context.Cars.AnyAsync(c => c.Plate == dto.Plate);
 
             if(plateExists)
             {
                 return BadRequest("Placa já foi registrada");
-            }
-
-            //verificar se o usuário existe
-            var userExists = await _context.Users.AnyAsync(u => u.Id == dto.UserId);
-
-            if (!userExists)
-            {
-                return NotFound("Usuário não encontrado");
             }
 
             var car = new Car

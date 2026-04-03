@@ -23,11 +23,6 @@ namespace LSBlueZone.API.Controllers
             _configuration = configuration;
         }
 
-        public AuthController(AppDbContext context)
-        {
-            _context = context;
-        }
-
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterUserDTO dto)
         {
@@ -71,7 +66,14 @@ namespace LSBlueZone.API.Controllers
             }
 
             var jwtSettings = _configuration.GetSection("Jwt");
-            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
+            var keyString = jwtSettings["Key"];
+
+            if(string.IsNullOrEmpty(keyString))
+            {
+                return StatusCode(500, "JWT Key não configurada");
+            }
+
+            var key = Encoding.ASCII.GetBytes(keyString);
 
             var claims = new List<Claim>
             {
