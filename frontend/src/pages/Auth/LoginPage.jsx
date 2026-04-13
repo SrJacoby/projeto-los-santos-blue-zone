@@ -45,7 +45,7 @@ export default function LoginPage() {
 
             //salva token
             login(data.token)
-            navigate("/dashboard")
+            navigate("/vehicles")
         } catch(error){
             if(error.response){
                 setApiError(error.response.data || "Erro ao fazer login")
