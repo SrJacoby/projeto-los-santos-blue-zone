@@ -47,7 +47,7 @@ namespace LSBlueZone.API.Controllers
                 Model = dto.Model,
                 Color = dto.Color,
                 Name = dto.Name,
-                UserId = dto.UserId,
+                UserId = userId,
             };
 
             _context.Cars.Add(car);

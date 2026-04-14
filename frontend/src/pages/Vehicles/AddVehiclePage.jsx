@@ -1,6 +1,7 @@
 import {Box, Typography, TextField, Button, Paper } from "@mui/material"
 import {useState} from "react"
 import {useNavigate} from "react-router-dom"
+import { createVehicleRequest } from "../../services/vehicleService"
 
 export default function AddVehiclePage(){
     const [name, setName] = useState("")
@@ -10,11 +11,14 @@ export default function AddVehiclePage(){
 
     const [errors, setErrors] = useState("")
 
+    const [apiError, setApiError] = useState("")
+    const [loading, setLoading] = useState(false)
+
     const navigate = useNavigate()
 
     const plateRegex = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const newErrors = {}
 
         // Placa
@@ -38,12 +42,27 @@ export default function AddVehiclePage(){
 
         if(Object.keys(newErrors).length > 0) return
 
-        console.log("Veículo válido:", {
-            name,
-            plate: plate.toUpperCase(),
-            model,
-            color,
-        })
+        try{
+            setLoading(true)
+
+            await createVehicleRequest({
+                plate: plate.toUpperCase(),
+                model,
+                color,
+                name: name.trim() || null,
+            })
+
+            alert("Veículo cadastrado com sucesso!")
+            navigate("/vehicles")
+        } catch(error){
+            if(error.response){
+                setApiError(error.response.data || "Erro ao cadastrar veículo")
+            } else{
+                setApiError("Erro de conexão com o servidor")
+            }
+        } finally{
+            setLoading(false)
+        }
     }
 
     return(
@@ -63,6 +82,7 @@ export default function AddVehiclePage(){
                     border: "1px solid #2a2a2a"
                 }}
             >
+                
                 <Typography
                     variant="h5"
                     sx={{
@@ -73,6 +93,19 @@ export default function AddVehiclePage(){
                 >
                     Adicionar Veículo
                 </Typography>
+
+                {apiError && (
+                    <Typography
+                        sx={{
+                            color: "#ff4d4d",
+                            marginBottom: 2,
+                            textAlign: "center",
+                        }}
+                    >
+                        {apiError}
+                    </Typography>
+
+                )}
 
                 {/* Nome */}
                 <TextField
@@ -166,6 +199,7 @@ export default function AddVehiclePage(){
                     variant="contained"
                     fullWidth
                     onClick={handleSubmit}
+                    disabled={loading}
                     sx={{
                         marginTop: 2,
                         backgroundColor: "#00a86b",
@@ -176,7 +210,7 @@ export default function AddVehiclePage(){
                         },
                     }}
                 >
-                    Salvar Veículo
+                    {loading ? "Salvando..." : "Salvar Veículo"}
                 </Button>
 
                 {/* Voltar */}
