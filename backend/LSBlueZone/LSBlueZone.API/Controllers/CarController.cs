@@ -57,12 +57,48 @@ namespace LSBlueZone.API.Controllers
         }
 
         //Listar carros de um usuário
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetCarsByUser(int userId)
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetMyCars()
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if(userIdClaim == null)
+            {
+                return Unauthorized("Token inválido");
+            }
+
+            var userId = int.Parse(userIdClaim.Value);
+
             var cars = await _context.Cars.Where(c => c.UserId == userId).ToListAsync();
 
             return Ok(cars);
+        }
+
+        //Deletar carro
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCar(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if(userIdClaim == null)
+            {
+                return Unauthorized("Token inválido");
+            }
+
+            var userId = int.Parse(userIdClaim.Value);
+
+            var car = await _context.Cars.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+            if(car == null)
+            {
+                return NotFound("Veículo não encontrado");
+            }
+
+            _context.Cars.Remove(car);
+            await _context.SaveChangesAsync();
+
+            return Ok("Veículo removido");
         }
     }
 }

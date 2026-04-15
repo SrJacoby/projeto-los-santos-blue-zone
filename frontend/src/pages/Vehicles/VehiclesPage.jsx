@@ -1,8 +1,8 @@
-import {Box, Typography, Button, Paper} from "@mui/material"
+import {Box, Typography, Button, Paper, IconButton, Snackbar, Alert, Skeleton} from "@mui/material"
+import {Delete} from "@mui/icons-material"
 import {useNavigate} from "react-router-dom"
 import {useEffect, useState} from "react"
-import { getVehiclesRequest } from "../../services/vehicleService"
-import {jwtDecode} from "jwt-decode"
+import { getVehiclesRequest, deleteVehicleRequest } from "../../services/vehicleService"
 
 export default function VehiclesPage(){
     const navigate = useNavigate()
@@ -11,14 +11,15 @@ export default function VehiclesPage(){
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
 
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: "",
+        severity: "success",
+    })
+
     const fetchVehicles = async() => {
         try{
-            const token = localStorage.getItem("token")
-            const decoded = jwtDecode(token)
-
-            const userId = decoded.nameid
-
-            const data = await getVehiclesRequest(userId)
+            const data = await getVehiclesRequest()
             setVehicles(data)
         } catch{
             setError("Erro ao criar veículos")
@@ -30,6 +31,30 @@ export default function VehiclesPage(){
     useEffect(() => {
         fetchVehicles()
     }, [])
+
+    const handleDelete = async(id) => {
+        const confirmDelete = window.confirm("Deseja excluir esse veículo?")
+
+        if(!confirmDelete) return
+        
+        try{
+            await deleteVehicleRequest(id)
+
+            setSnackbar({
+                open: true,
+                message: "Veículo removido com sucesso",
+                severity: "success",
+            })
+
+            setVehicles((prev) => prev.filter((v) => v.id !== id))
+        } catch{
+            setSnackbar({
+            open: true,
+            message: "Erro ao deletar veículo",
+            severity: error,
+            })
+        }
+    }
 
     return(
         <Box
@@ -83,23 +108,37 @@ export default function VehiclesPage(){
                             marginBottom: 2,
                             backgroundColor: "#181818",
                             border: "1px solid #2a2a2a",
-                            color: "#fff"
+                            borderRadius: 2,
+                            color: "#fff",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                         }}
                     >
-                        {/* Nome ou fallback */}
-                        <Typography sx={{fontWeight: "bold"}}>
-                            {vehicle.name || vehicle.plate}
-                        </Typography>
+                        <Box>
+                            {/* Nome ou fallback */}
+                            <Typography sx={{fontWeight: "bold"}}>
+                                {vehicle.name || vehicle.plate}
+                            </Typography>
 
-                        {/* Modelo */}
-                        <Typography sx={{color: "#aaa", fontSize: 14}}>
-                            {vehicle.model}
-                        </Typography>
+                            {/* Modelo */}
+                            <Typography sx={{color: "#aaa", fontSize: 14}}>
+                                {vehicle.model}
+                            </Typography>
 
-                        {/* Placa */}
-                        <Typography sx={{color: "#00a86b", fontSize: 14}}>
-                            {vehicle.plate}
-                        </Typography>
+                            {/* Placa */}
+                            <Typography sx={{color: "#00a86b", fontSize: 14}}>
+                                {vehicle.plate}
+                            </Typography>
+                        </Box>
+
+                        {/* Ações */}
+                        <IconButton 
+                            onClick={() => handleDelete(vehicle.id)}
+                            sx={{color: "#ff4d4d"}}
+                        >
+                            <Delete/>
+                        </IconButton>
                     </Paper>
                 ))
             )}
@@ -121,6 +160,24 @@ export default function VehiclesPage(){
             >
                 Adicionar veículo
             </Button>
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3000}
+                onClose={() =>
+                    setSnackbar((prev) => ({...prev, open: false}))
+                }
+                anchorOrigin={{vertical:"bottom", horizontal: "center"}}
+            >
+                <Alert
+                    severity={snackbar.severity}
+                    onClose={() => 
+                        setSnackbar((prev) => ({...prev, open: false}))
+                    }
+                    sx={{width: "100%"}}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     )
 }

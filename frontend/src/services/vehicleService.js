@@ -5,7 +5,12 @@ export const createVehicleRequest = async(data) => {
     return response.data
 }
 
-export const getVehiclesRequest = async(userId) => {
-    const response = await api.get(`/car/user/${userId}`)
+export const getVehiclesRequest = async() => {
+    const response = await api.get(`/car`)
+    return response.data
+}
+
+export const deleteVehicleRequest = async(id) => {
+    const response = await api.delete(`/car/${id}`)
     return response.data
 }
