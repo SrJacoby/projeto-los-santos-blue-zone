@@ -1,7 +1,7 @@
 import {Box, Typography, TextField, Button, Paper } from "@mui/material"
-import {useState} from "react"
-import {useNavigate} from "react-router-dom"
-import { createVehicleRequest } from "../../services/vehicleService"
+import {useState, useEffect} from "react"
+import {useNavigate, useParams} from "react-router-dom"
+import { createVehicleRequest, getVehicleByIdRequest, updateVehicleRequest } from "../../services/vehicleService"
 
 export default function AddVehiclePage(){
     const [name, setName] = useState("")
@@ -15,6 +15,10 @@ export default function AddVehiclePage(){
     const [loading, setLoading] = useState(false)
 
     const navigate = useNavigate()
+
+    const {id} = useParams();
+    const isEditing = Boolean(id)
+    const [loadingVehicle, setLoadingVehicle] = useState(isEditing)
 
     const plateRegex = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/
 
@@ -45,24 +49,81 @@ export default function AddVehiclePage(){
         try{
             setLoading(true)
 
-            await createVehicleRequest({
+            const vehicleData = {
                 plate: plate.toUpperCase(),
                 model,
                 color,
                 name: name.trim() || null,
-            })
+                userId: 0,
+            }
 
-            alert("Veículo cadastrado com sucesso!")
+            if(isEditing){
+                await updateVehicleRequest(id, vehicleData)
+
+                alert("Veículo atualizado com sucesso!")
+            } else{
+                await createVehicleRequest(vehicleData)
+
+                alert("Veículo cadastrado com sucesso!")
+            }
+
             navigate("/vehicles")
         } catch(error){
             if(error.response){
-                setApiError(error.response.data || "Erro ao cadastrar veículo")
+                setApiError(error.response.data || "Erro ao salvar veículo")
             } else{
                 setApiError("Erro de conexão com o servidor")
             }
         } finally{
             setLoading(false)
         }
+    }
+
+    useEffect(() => {
+        if(!isEditing) return
+
+        const fetchVehicle = async() => {
+            try{
+                const vehicle = await getVehicleByIdRequest(id)
+
+                setPlate(vehicle.plate || "")
+                setPlate(vehicle.model || "")
+                setPlate(vehicle.color || "")
+                setPlate(vehicle.name || "")
+            } catch{
+                setApiError("Erro ao carregar veículo")
+            } finally{
+                setLoadingVehicle(false)
+            }
+        }
+
+        fetchVehicle()
+    }, [id, isEditing])
+
+    if(loadingVehicle){
+        return(
+            <Box
+                sx={{
+                    maxWidth: 400,
+                    margin: "0 auto",
+                    minHeight: "100vh",
+                    padding: 2,
+                    background: "linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%)",
+                }}
+            >
+                <Paper
+                    sx={{
+                        padding: 2,
+                        backgroundColor: "#181818",
+                        border: "1px solid #2a2a2a"
+                    }}
+                >
+                    <Typography sx={{color: "#888"}}>
+                        Carregando veículo...
+                    </Typography>
+                </Paper>
+            </Box>
+        )
     }
 
     return(
@@ -91,7 +152,7 @@ export default function AddVehiclePage(){
                         marginBottom: 2,
                     }}
                 >
-                    Adicionar Veículo
+                    {isEditing ? "Editar Veículo" : "Adicionar veículo"}
                 </Typography>
 
                 {apiError && (
@@ -210,7 +271,13 @@ export default function AddVehiclePage(){
                         },
                     }}
                 >
-                    {loading ? "Salvando..." : "Salvar Veículo"}
+                    {loading
+                        ? isEditing
+                            ? "Atualizando..."
+                            : "Salvando..."
+                        : isEditing
+                            ? "Atualizar Veículo"
+                            : "Salvar Veículo..."}
                 </Button>
 
                 {/* Voltar */}

@@ -1,5 +1,5 @@
 import {Box, Typography, Button, Paper, IconButton, Snackbar, Alert, Skeleton} from "@mui/material"
-import {Delete} from "@mui/icons-material"
+import {Delete, Edit} from "@mui/icons-material"
 import {useNavigate} from "react-router-dom"
 import {useEffect, useState} from "react"
 import { getVehiclesRequest, deleteVehicleRequest } from "../../services/vehicleService"
@@ -51,7 +51,7 @@ export default function VehiclesPage(){
             setSnackbar({
             open: true,
             message: "Erro ao deletar veículo",
-            severity: error,
+            severity: "error",
             })
         }
     }
@@ -80,9 +80,41 @@ export default function VehiclesPage(){
 
             {/* Lista (placeholder) */}
             {loading? (
-                <Typography sx={{color: "#888"}}>
-                    Carregando
-                </Typography>
+                <>
+                    {[1, 2, 3].map((item) => (
+                        <Paper
+                            key={item}
+                            sx={{
+                                padding: 2,
+                                marginBottom: 2,
+                                backgroundColor: "#181818",
+                                border: "1px solid #2a2a2a",
+                                borderRadius: 2,
+                            }}
+                        >
+                            <Skeleton
+                                variant="text"
+                                width="60%"
+                                height={28}
+                                sx={{ bgcolor: "#2a2a2a"}}
+                            />
+
+                            <Skeleton
+                                variant="text"
+                                width="40%"
+                                height={22}
+                                sx={{ bgcolor: "#2a2a2a"}}
+                            />
+
+                            <Skeleton
+                                variant="text"
+                                width="30%"
+                                height={22}
+                                sx={{ bgcolor: "#2a2a2a"}}
+                            />
+                        </Paper>
+                    ))}
+                </>
             ) : error ? (
                 <Typography sx={{color: "#ff4d4d"}}>
                     {error}
@@ -133,12 +165,20 @@ export default function VehiclesPage(){
                         </Box>
 
                         {/* Ações */}
-                        <IconButton 
-                            onClick={() => handleDelete(vehicle.id)}
-                            sx={{color: "#ff4d4d"}}
-                        >
-                            <Delete/>
-                        </IconButton>
+                        <Box>
+                            <IconButton 
+                                sx={{color: "#00a86b"}}
+                                onClick={() => navigate(`/vehicles/edit/${vehicle.id}`)}
+                            >
+                                <Edit/>
+                            </IconButton>
+                            <IconButton 
+                                sx={{color: "#ff4d4d"}}
+                                onClick={() => handleDelete(vehicle.id)}
+                            >
+                                <Delete/>
+                            </IconButton>
+                        </Box>
                     </Paper>
                 ))
             )}

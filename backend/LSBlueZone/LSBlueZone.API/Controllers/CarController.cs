@@ -100,5 +100,75 @@ namespace LSBlueZone.API.Controllers
 
             return Ok("Veículo removido");
         }
+
+        //Pegar carro por ID
+
+        [Authorize]
+        [HttpGet("{id}")]
+
+        public async Task<IActionResult> GetCarById(int id)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if(userIdClaim == null)
+            {
+                return Unauthorized("Token inválido");
+            }
+
+            var userId = int.Parse(userIdClaim.Value);
+
+            var car = await _context.Cars.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+            if (car == null)
+            {
+                return NotFound("Veículo não encontrado");
+            }
+
+            return Ok(car);
+        }
+
+        //Atualizar carro
+
+        [Authorize]
+        [HttpPut("{id}")]
+
+        public async Task<IActionResult> UpdateCar(int id, CreateCarDTO dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (userIdClaim == null)
+            {
+                return Unauthorized("Token inválido");
+            }
+
+            var userId = int.Parse(userIdClaim.Value);
+
+            var car = await _context.Cars.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+            if (car == null)
+            {
+                return NotFound("Veículo não encontrado");
+            }
+            //Verificação de placa
+            var plateExists = await _context.Cars.AnyAsync(c =>
+                c.Plate == dto.Plate &&
+                c.Id != id
+            );
+
+            if(plateExists)
+            {
+                return BadRequest("Placa já foi registrada");
+            }
+
+            car.Plate = dto.Plate;
+            car.Model = dto.Model;
+            car.Color = dto.Color;
+            car.Name = dto.Name;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(car);
+
+        }
     }
 }

@@ -38,6 +38,15 @@ export default function AppRoutes(){
                         </PrivateRoute>
                     }
                 /> 
+
+                <Route
+                    path="/vehicles/edit/:id"
+                    element={
+                        <PrivateRoute>
+                            <AddVehiclePage/>
+                        </PrivateRoute>
+                    }
+                /> 
             </Routes>
         </BrowserRouter>
     )
