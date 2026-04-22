@@ -1,4 +1,4 @@
-import {Box, Typography, TextField, Button, Paper } from "@mui/material"
+import {Box, Typography, TextField, Button, Paper, Snackbar, Alert } from "@mui/material"
 import {useState, useEffect} from "react"
 import {useNavigate, useParams} from "react-router-dom"
 import { createVehicleRequest, getVehicleByIdRequest, updateVehicleRequest } from "../../services/vehicleService"
@@ -13,6 +13,11 @@ export default function AddVehiclePage(){
 
     const [apiError, setApiError] = useState("")
     const [loading, setLoading] = useState(false)
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: "",
+        severity: "success",
+    })
 
     const navigate = useNavigate()
 
@@ -60,20 +65,37 @@ export default function AddVehiclePage(){
             if(isEditing){
                 await updateVehicleRequest(id, vehicleData)
 
-                alert("Veículo atualizado com sucesso!")
+                setSnackbar({
+                    open: true,
+                    message: "Veículo atualizado com sucesso",
+                    severity: "success",
+                })
             } else{
                 await createVehicleRequest(vehicleData)
 
-                alert("Veículo cadastrado com sucesso!")
+                setSnackbar({
+                    open: true,
+                    message: "Veículo criado com sucesso",
+                    severity: "success",
+                })
             }
 
-            navigate("/vehicles")
+            setTimeout(() => {
+                navigate("/vehicles")
+            }, 1500)
+
         } catch(error){
             if(error.response){
                 setApiError(error.response.data || "Erro ao salvar veículo")
             } else{
                 setApiError("Erro de conexão com o servidor")
             }
+
+            setSnackbar({
+                open: true,
+                message: "Erro ao salvar veículo",
+                severity: "error",
+            })
         } finally{
             setLoading(false)
         }
@@ -87,9 +109,9 @@ export default function AddVehiclePage(){
                 const vehicle = await getVehicleByIdRequest(id)
 
                 setPlate(vehicle.plate || "")
-                setPlate(vehicle.model || "")
-                setPlate(vehicle.color || "")
-                setPlate(vehicle.name || "")
+                setModel(vehicle.model || "")
+                setColor(vehicle.color || "")
+                setName(vehicle.name || "")
             } catch{
                 setApiError("Erro ao carregar veículo")
             } finally{
@@ -277,7 +299,7 @@ export default function AddVehiclePage(){
                             : "Salvando..."
                         : isEditing
                             ? "Atualizar Veículo"
-                            : "Salvar Veículo..."}
+                            : "Salvar Veículo"}
                 </Button>
 
                 {/* Voltar */}
@@ -292,6 +314,24 @@ export default function AddVehiclePage(){
                     Voltar
                 </Button>
             </Paper>
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3000}
+                onClose={() =>
+                    setSnackbar((prev) => ({...prev, open: false}))
+                }
+                anchorOrigin={{vertical: "bottom", horizontal: "center"}}
+            >
+                <Alert
+                    severity={snackbar.severity}
+                    onClose={() =>
+                        setSnackbar((prev) => ({...prev, open: false}))
+                    }
+                    sx={{width: "100%"}}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     )
 }
