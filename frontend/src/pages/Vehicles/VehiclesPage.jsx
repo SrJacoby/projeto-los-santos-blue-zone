@@ -1,4 +1,4 @@
-import {Box, Typography, Button, Paper, IconButton, Snackbar, Alert, Skeleton} from "@mui/material"
+import {Box, Typography, Button, Paper, IconButton, Snackbar, Alert, Skeleton, Dialog, DialogTitle, DialogContent, DialogActions} from "@mui/material"
 import {Delete, Edit} from "@mui/icons-material"
 import {useNavigate} from "react-router-dom"
 import {useEffect, useState} from "react"
@@ -17,6 +17,11 @@ export default function VehiclesPage(){
         severity: "success",
     })
 
+    const [deleteDialog, setDeleteDialog] = useState({
+        open: false,
+        vehicleId: null,
+    })
+
     const fetchVehicles = async() => {
         try{
             const data = await getVehiclesRequest()
@@ -32,27 +37,27 @@ export default function VehiclesPage(){
         fetchVehicles()
     }, [])
 
-    const handleDelete = async(id) => {
-        const confirmDelete = window.confirm("Deseja excluir esse veículo?")
-
-        if(!confirmDelete) return
-        
+    const confirmDelete = async() => {
         try{
-            await deleteVehicleRequest(id)
+            await deleteVehicleRequest(deleteDialog.vehicleId)
+
+            setVehicles((prev) => 
+                prev.filter((v) => v.id !== deleteDialog.vehicleId)
+            )
 
             setSnackbar({
                 open: true,
                 message: "Veículo removido com sucesso",
                 severity: "success",
             })
-
-            setVehicles((prev) => prev.filter((v) => v.id !== id))
-        } catch{
+        } catch {
             setSnackbar({
-            open: true,
-            message: "Erro ao deletar veículo",
-            severity: "error",
+                open: true,
+                message: "Erro ao deletar veículo",
+                severity: "error",
             })
+        } finally {
+            setDeleteDialog({open: false, vehicleId: null})
         }
     }
 
@@ -174,7 +179,9 @@ export default function VehiclesPage(){
                             </IconButton>
                             <IconButton 
                                 sx={{color: "#ff4d4d"}}
-                                onClick={() => handleDelete(vehicle.id)}
+                                onClick={() => 
+                                    setDeleteDialog({open: true, vehicleId: vehicle.id})
+                                }
                             >
                                 <Delete/>
                             </IconButton>
@@ -218,6 +225,51 @@ export default function VehiclesPage(){
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+            <Dialog
+                open={deleteDialog.open}
+                onClose={() =>
+                    setDeleteDialog({open: false, vehicleId: null})
+                }
+                PaperProps={{
+                    sx: {
+                        backgroundColor: "#181818",
+                        color: "#fff",
+                        borderRadius: 2,
+                    },
+                }}
+            >
+                <DialogTitle sx={{color: "#000"}}>
+                    Confirmar exclusão
+                </DialogTitle>
+                <DialogContent sx={{color: "#aaa"}}>
+                    Tem certeza que deseja excluir este veículo?
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => 
+                            setDeleteDialog({open: false, vehicleId: null})
+                        }
+                        sx={{color: "#888"}}
+                    >
+                        Cancelar
+                    </Button>
+
+                    <Button
+                        onClick={confirmDelete}
+                        sx={{
+                            color: "#fff",
+                            backgroundColor: "#ff4d4d",
+                            "&:hover": {
+                                backgroundColor: "#e60000"
+                            }
+                        }}
+                    >
+                        Excluir
+                    </Button>
+                </DialogActions>
+                </Dialog>
         </Box>
+
+        
     )
 }
