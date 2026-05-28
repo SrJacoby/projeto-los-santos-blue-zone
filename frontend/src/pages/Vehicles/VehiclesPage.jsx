@@ -268,6 +268,17 @@ export default function VehiclesPage(){
                     </Button>
                 </DialogActions>
                 </Dialog>
+            <Button
+                variant="contained"
+                fullWidth
+                onClick={() => navigate("/parking")}
+                sx={{
+                    marginTop: 2,
+                    backgroundColor: "#00a86b"
+                }}
+            >
+                Ir para estacionamento
+            </Button>
         </Box>
 
         

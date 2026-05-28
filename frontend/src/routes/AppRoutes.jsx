@@ -5,6 +5,7 @@ import PrivateRoute from "./PrivateRoute"
 import RegisterPage from "../pages/Auth/RegisterPage"
 import VehiclesPage from "../pages/Vehicles/VehiclesPage"
 import AddVehiclePage from "../pages/Vehicles/AddVehiclePage"
+import ParkingPage from "../pages/Parking/ParkingPage"
 
 export default function AppRoutes(){
     return(
@@ -44,6 +45,15 @@ export default function AppRoutes(){
                     element={
                         <PrivateRoute>
                             <AddVehiclePage/>
+                        </PrivateRoute>
+                    }
+                /> 
+
+                <Route
+                    path="/parking"
+                    element={
+                        <PrivateRoute>
+                            <ParkingPage/>
                         </PrivateRoute>
                     }
                 /> 
