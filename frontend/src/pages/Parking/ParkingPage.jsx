@@ -15,6 +15,7 @@ export default function ParkingPage(){
         message: "",
         severity: "success"
     })
+    const [activeParking, setActiveParking] = useState(null)
 
     useEffect(() => {
         const fetchData = async() => {
@@ -64,11 +65,13 @@ export default function ParkingPage(){
         }
 
         try{
-            await createParkingRequest({
+            const parking = await createParkingRequest({
                 carId: selectedVehicle,
                 zoneId: selectedZone,
-                durationMinutes: selectedTime,
+                durationMinutes: selectedTime
             })
+
+            setActiveParking(parking)
 
             setSnackbar({
                 open: true,
@@ -282,6 +285,101 @@ export default function ParkingPage(){
             >
                 Iniciar Estacionamento
             </Button>
+
+            {activeParking && (
+                <Paper
+                    sx={{
+                        marginTop: 3,
+                        padding: 2,
+                        backgroundColor: "#181818",
+                        border: "1px solid #00a86b",
+                        borderRadius: 2,
+                    }}
+                >
+                    <Typography
+                        sx={{
+                            color: "#00a86b",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            marginBottom: 2,
+                        }}
+                    >
+                        Estacionamento Ativo
+                    </Typography>
+
+                    {/* Veículo */}
+                    <Typography
+                        sx={{
+                            color: "#888",
+                            fontSize: 14,
+                        }}
+                    >
+                        Veículo
+                    </Typography>
+                    <Typography
+                        sx={{
+                            color: "#fff",
+                            marginBottom: 2,
+                        }}
+                    >
+                        {activeParking.car?.plate}
+                    </Typography>
+
+                    {/* Zona */}
+                    <Typography
+                        sx={{
+                            color: "#888",
+                            fontSize: 14,
+                        }}
+                    >
+                        Zona
+                    </Typography>
+                    <Typography
+                        sx={{
+                            color: "#fff",
+                            marginBottom: 2,
+                        }}
+                    >
+                        {activeParking.zone?.name}
+                    </Typography>
+
+                    {/* Valor */}
+                    <Typography
+                        sx={{
+                            color: "#888",
+                            fontSize: 14,
+                        }}
+                    >
+                        Valor Pago
+                    </Typography>
+                    <Typography
+                        sx={{
+                            color: "#00a86b",
+                            fontWeight: "bold",
+                            marginBottom: 2,
+                        }}
+                    >
+                        {activeParking.totalPrice}
+                    </Typography>
+
+                    {/* Final */}
+                    <Typography
+                        sx={{
+                            color: "#888",
+                            fontSize: 14,
+                        }}
+                    >
+                        Finalize em
+                    </Typography>
+                    <Typography
+                        sx={{
+                            color: "#fff",
+                        }}
+                    >
+                        {new Date(activeParking.endTime).toLocaleString()}
+                    </Typography>
+                </Paper>
+            )}
 
             <Snackbar
                 open={snackbar.open}
