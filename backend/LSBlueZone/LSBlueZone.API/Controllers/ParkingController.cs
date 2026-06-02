@@ -61,6 +61,14 @@ namespace LSBlueZone.API.Controllers
 
                 await _context.SaveChangesAsync();
 
+                await _context.Entry(activeParking)
+                    .Reference(p => p.Zone)
+                    .LoadAsync();
+
+                await _context.Entry(activeParking)
+                    .Reference(p => p.Car)
+                    .LoadAsync();
+
                 return Ok(activeParking);
             }
 
@@ -88,7 +96,12 @@ namespace LSBlueZone.API.Controllers
             _context.Parkings.Add(parking);
             await _context.SaveChangesAsync();
 
-            return Ok(parking);
+            var createdParking = await _context.Parkings
+                   .Include(p => p.Car)
+                   .Include(p => p.Zone)
+                   .FirstAsync(p => p.Id == parking.Id);
+
+            return Ok(createdParking);
         }
 
         [HttpGet("active/{carId}")]

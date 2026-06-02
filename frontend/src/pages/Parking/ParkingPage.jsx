@@ -16,6 +16,7 @@ export default function ParkingPage(){
         severity: "success"
     })
     const [activeParking, setActiveParking] = useState(null)
+    const [remainingTime, setRemainingTime] = useState("")
 
     useEffect(() => {
         const fetchData = async() => {
@@ -32,6 +33,33 @@ export default function ParkingPage(){
 
         fetchData()
     }, [])
+
+    useEffect(() => {
+        if(!activeParking) return
+
+        const interval = setInterval(() => {
+            const now = new Date()
+            const end = new Date(activeParking.endTime)
+
+            const diff = end - now
+
+            if(diff <= 0){
+                setRemainingTime("Expirado")
+                clearInterval(interval)
+                return
+            }
+
+            const hours = Math.floor(diff / (1000 * 60 * 60))
+            const minutes = Math.floor((diff / (1000 * 60)) % 60)
+            const seconds = Math.floor((diff / 1000) % 60)
+
+            setRemainingTime(
+                `${hours}h ${minutes}m ${seconds}s`
+            )
+        }, 1000)
+
+        return () => clearInterval(interval)
+    }, [activeParking])
 
     const parkingTimes =[
         {label: "5 minutos", value: 5},
@@ -72,6 +100,9 @@ export default function ParkingPage(){
             })
 
             setActiveParking(parking)
+
+            console.log(parking)
+            console.log(parking.endTime)
 
             setSnackbar({
                 open: true,
@@ -127,7 +158,7 @@ export default function ParkingPage(){
 
                 <Select
                     value={selectedVehicle}
-                    onChange={(e) => setSelectedVehicle(e.target.value)}
+                    onChange={(e) => setSelectedVehicle(Number(e.target.value))}
                     sx={{
                         color: "#fff",
                         ".MuiOutlinedInput-notchedOutline": {
@@ -156,7 +187,7 @@ export default function ParkingPage(){
 
                 <Select
                     value={selectedZone}
-                    onChange={(e) => setSelectedZone(e.target.value)}
+                    onChange={(e) => setSelectedZone(Number(e.target.value))}
                     sx={{
                         color: "#fff",
                         ".MuiOutlinedInput-notchedOutline": {
@@ -185,7 +216,7 @@ export default function ParkingPage(){
 
                 <Select
                     value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
+                    onChange={(e) => setSelectedTime(Number(e.target.value))}
                     sx={{
                         color: "#fff",
                         ".MuiOutlinedInput-notchedOutline": {
@@ -200,7 +231,7 @@ export default function ParkingPage(){
                     }}
                 >
                     {parkingTimes.map((time) => (
-                        <MenuItem key={time.id} value={time.value}>
+                        <MenuItem key={time.value} value={time.value}>
                             {time.label}
                         </MenuItem>
                     ))}
@@ -356,10 +387,36 @@ export default function ParkingPage(){
                         sx={{
                             color: "#00a86b",
                             fontWeight: "bold",
+                            fontSize: 24,
+                            textAlign: "center",
                             marginBottom: 2,
                         }}
                     >
-                        {activeParking.totalPrice}
+                        R$ {Number(activeParking.totalPrice).toFixed(2)}
+                    </Typography>
+
+                    {/* Contador */}
+                    <Typography
+                        sx={{
+                            color: "#888",
+                            fontSize: 14,
+                        }}
+                    >
+                        Tempo Restante
+                    </Typography>
+                    <Typography
+                        sx={{
+                            color: 
+                                remainingTime === "Expirado"
+                                    ? "#ff4d4d"
+                                    : "#00a86b",
+                            fontWeight: "bold",
+                            fontSize: 24,
+                            textAlign: "center",
+                            marginBottom: 2,
+                        }}
+                    >
+                        {remainingTime}
                     </Typography>
 
                     {/* Final */}
@@ -369,7 +426,7 @@ export default function ParkingPage(){
                             fontSize: 14,
                         }}
                     >
-                        Finalize em
+                        Finaliza em
                     </Typography>
                     <Typography
                         sx={{
