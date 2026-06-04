@@ -2,7 +2,7 @@ import {Box, Typography, Paper, Button, FormControl, InputLabel, Select, MenuIte
 import {useEffect, useState} from "react"
 import { getVehiclesRequest } from "../../services/vehicleService"
 import { getZonesRequest } from "../../services/zoneService"
-import { createParkingRequest } from "../../services/parkingService"
+import { createParkingRequest, getActiveParkingRequest } from "../../services/parkingService"
 
 export default function ParkingPage(){
     const [selectedVehicle, setSelectedVehicle] = useState("")
@@ -61,6 +61,26 @@ export default function ParkingPage(){
         return () => clearInterval(interval)
     }, [activeParking])
 
+    useEffect(() => {
+        if(!selectedVehicle) return
+
+        const fetchActiveParking = async() => {
+            try{
+                const parking = await getActiveParkingRequest(selectedVehicle)
+
+                setActiveParking(parking)
+                setSelectedTime("")
+            } catch(error){
+                if(error.response?.status !== 404){
+                    console.error(error)
+                }
+                setActiveParking(null)
+            }
+        }
+
+        fetchActiveParking()
+    }, [selectedVehicle])
+
     const parkingTimes =[
         {label: "5 minutos", value: 5},
         {label: "15 minutos", value: 15},
@@ -118,6 +138,8 @@ export default function ParkingPage(){
         }
     }
 
+    const hasActiveParking = !!activeParking
+
     return(
         <Box
             sx={{
@@ -156,6 +178,22 @@ export default function ParkingPage(){
                     Veículo
                 </InputLabel>
 
+                {hasActiveParking && (
+                    <Paper
+                        sx={{
+                            padding: 2,
+                            marginBottom: 2,
+                            backgroundColor: "#102418",
+                            border: "1px solid #00a86b",
+                            color: "#00a86b"
+                        }}
+                    
+                    >
+                        Já existe um estacionamento ativo para este veículo.
+                        
+                        O tempo seleiconado será adicionado ao estacionamento atual.
+                    </Paper>
+                )}
                 <Select
                     value={selectedVehicle}
                     onChange={(e) => setSelectedVehicle(Number(e.target.value))}
@@ -186,6 +224,7 @@ export default function ParkingPage(){
                 </InputLabel>
 
                 <Select
+                    disabled={hasActiveParking}
                     value={selectedZone}
                     onChange={(e) => setSelectedZone(Number(e.target.value))}
                     sx={{
@@ -314,7 +353,7 @@ export default function ParkingPage(){
                     }
                 }}
             >
-                Iniciar Estacionamento
+               {hasActiveParking ? "Adicionar tempo" : "Iniciar Estacionamento"}
             </Button>
 
             {activeParking && (

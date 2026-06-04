@@ -104,6 +104,7 @@ namespace LSBlueZone.API.Controllers
             return Ok(createdParking);
         }
 
+        [Authorize]
         [HttpGet("active/{carId}")]
         public async Task<IActionResult> GetActiveParking(int carId)
         {
